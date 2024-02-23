@@ -1,0 +1,64 @@
+parent.0 = koza.params
+
+# We have one function set, of class GPFunctionSet
+gp.fs.size = 1
+gp.fs.0 = ec.gp.GPFunctionSet
+# We'll call the function set "f0".
+gp.fs.0.name = f0
+
+# We have five functions in the function set.  They are:
+gp.fs.0.size = 15
+
+#functions created by us
+gp.fs.0.func.0 = functions.Min
+gp.fs.0.func.0.nc = nc2
+gp.fs.0.func.1 = functions.Mul
+gp.fs.0.func.1.nc = nc2
+gp.fs.0.func.2 = functions.Add
+gp.fs.0.func.2.nc = nc2
+gp.fs.0.func.3 = functions.Sub
+gp.fs.0.func.3.nc = nc2
+gp.fs.0.func.4 = functions.Div
+gp.fs.0.func.4.nc = nc2
+gp.fs.0.func.5 = functions.Ephemeral
+gp.fs.0.func.5.nc = nc0
+gp.fs.0.func.6 = functions.Sin
+gp.fs.0.func.6.nc = nc1
+gp.fs.0.func.7 = functions.Cos
+gp.fs.0.func.7.nc = nc1
+gp.fs.0.func.1 = functions.Max
+gp.fs.0.func.1.nc = nc2
+
+#terminal created by us
+gp.fs.0.func.8 = functions.Area
+gp.fs.0.func.8.nc = nc0
+gp.fs.0.func.9 = functions.ConvexArea
+gp.fs.0.func.9.nc = nc0
+gp.fs.0.func.10 = functions.Eccentricity
+gp.fs.0.func.10.nc = nc0
+gp.fs.0.func.11 = functions.Extent
+gp.fs.0.func.11.nc = nc0
+gp.fs.0.func.12 = functions.MajorAxis
+gp.fs.0.func.12.nc = nc0
+gp.fs.0.func.13 = functions.MinorAxis
+gp.fs.0.func.13.nc = nc0
+gp.fs.0.func.14 = functions.Perimeter
+gp.fs.0.func.14.nc = nc0
+
+pop.subpop.0.size = 800
+
+generations = 100
+
+
+eval.problem = main.RiceClassifier
+eval.problem.data = main.DoubleData
+
+# output statistics to the file "out.stat" in the directory
+# the run was started in
+stat.file				$out.stat
+
+##change
+breed.elite.0 = 			3
+
+# Reproduction will use Tournament Selection
+breed.reproduce.source.0 = ec.select.TournamentSelection
