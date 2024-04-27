@@ -2,40 +2,215 @@ package StockPredictor;
 
 import ec.EvolutionState;
 import ec.Individual;
+import ec.gp.GPIndividual;
 import ec.gp.GPProblem;
+import ec.gp.koza.KozaFitness;
 import ec.simple.SimpleProblemForm;
+import ec.util.Parameter;
+import terminal.DoubleData;
 
-import java.io.*;
-import java.nio.file.Path;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
-import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Logger;
 
 public class Stock extends GPProblem implements SimpleProblemForm {
 
-    Date date;
-    public double open, high, low, close, adjustedClose;
-    public long volume;
-    @Override
-    public void evaluate(EvolutionState evolutionState, Individual individual, int i, int i1) {
+    public String date;
+    public double open, high, low, close, adjustedClose, volume;     //parameters of stock
+    public static final String P_DATA = "data";
+    private static final double ACCEPTED_ERROR = 100;
+    private final int TOTAL_NUM_OF_DATA_ROWS = 9564; //total rows of data
+    private final int NUM_OF_DATA_FIELDS = 7; //total columns of data
+    String[][] stockData = new String[TOTAL_NUM_OF_DATA_ROWS][NUM_OF_DATA_FIELDS]; //2d array to store rice data
+    String[][] trainingData, testingData;
+    private final String PATH = "src/main/data/MSFT.csv";
 
+
+    /**
+     * Evaluates the fitness of an individual.
+     *
+     * @param evolutionState The current EvolutionState.
+     * @param individual     The individual to evaluate.
+     * @param threadNum      The thread number.
+     * @param subPopulation  The subpopulation (not used).
+     */
+    @Override
+    public void evaluate(EvolutionState evolutionState, Individual individual, int subPopulation, int threadNum) {
+        if(!individual.evaluated){
+            DoubleData input = (DoubleData) this.input;
+
+            int hits = 0;
+            double sum = 0.0;
+            double expectedResult;
+
+            for(int i=0;i<stockData.length-2;i++){
+
+                //date = Double.parseDouble(stockData[i][0]);
+                open = Double.parseDouble(stockData[i][1]);
+                high = Double.parseDouble(stockData[i][2]);
+                low = Double.parseDouble(stockData[i][3]);
+                close = Double.parseDouble(stockData[i][4]);
+                adjustedClose = Double.parseDouble(stockData[i][5]);
+                volume = Double.parseDouble(stockData[i][6]);
+
+                //let's say we want to get the adjusted close right now for everyday
+                expectedResult = Double.parseDouble(stockData[i+1][1]);
+                ((GPIndividual) individual).trees[0].child.eval(evolutionState, threadNum, this.input, this.stack, (GPIndividual) individual, this);
+
+                //System.out.println("expectedResult is "+expectedResult + " "+ "input is :"+input.x);
+                double result = Math.abs(expectedResult - input.x);
+
+                if (result <= ACCEPTED_ERROR) {
+                    //System.out.println(hits+" hits");
+                    ++hits;
+                }
+                sum += result;
+
+            }
+            //set koza statistics
+            //hits = getHits(evolutionState, (GPIndividual) individual,threadNum,input,hits,expectedResult);
+            KozaFitness kozaFitness = ((KozaFitness) individual.fitness);
+            kozaFitness.setStandardizedFitness(evolutionState,sum); //todo training data
+            kozaFitness.hits = hits;
+            individual.evaluated = true;
+        }
     }
 
-    public void fileReader(String path){
+    /**
+     * Describes the best individual.
+     *
+     * @param state         The current EvolutionState.
+     * @param bestIndividual    The best individual.
+     * @param subpopulation The subpopulation index.
+     * @param threadnum     The thread number.
+     * @param log           Additional parameter (not used).
+     */
+//    @Override
+//    public void describe(EvolutionState state, Individual bestIndividual, int subpopulation, int threadnum, int log) {
+//        super.describe(state, bestIndividual, subpopulation, threadnum, log);
+//
+//        if(!(bestIndividual instanceof GPIndividual))
+//            state.output.fatal("The best individual is not an instance of GPIndividual!!");
+//
+//        DoubleData input = (DoubleData) this.input;
+//        int hits = 0;
+//        //int[] confusionMatrix=null;
+//        double expectedResult;
+//
+//        state.output.println("Best Individual's total correct hits: "+hits+" out of "+this.stockData.length,log);
+//        state.output.println("Best Individual's testing correctness: "+((double)hits / (double)this.stockData.length)*100+"%",log);
+//
+//        if(hits == this.trainingData.length)
+//            state.output.println("Best individual is OPTIMAL", log);
+//        else
+//            state.output.println("Best individual is not optimal.",log);
+//    }
 
-        try (BufferedReader br = new BufferedReader(new FileReader(path))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                // Split the line by tab (,) delimiter
-                String[] parts = line.split(",");
-                // Print each part
-                for (String part : parts) {
-                    System.out.print(part + "\t");
-                }
-                System.out.println(); // Move to the next line
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+    /**
+     * This method setups the GA problem by reading the data file and initializing the problem
+     * @param state current state
+     * @param base current base
+     */
+    @Override
+    public void setup(final EvolutionState state, final Parameter base) {
+        super.setup(state, base);
+        if (!(input instanceof DoubleData)) {
+            state.output.fatal("GPData class must subclass from " + DoubleData.class,
+                    base.push(P_DATA), null);
         }
+        fileReader(PATH);
+    }
 
+    /**
+     * This method splits the data into 2 arrays. the testing and training array
+     * @param percentage percentage of data to put in training and remaining in testing
+     */
+    public void splitData(double percentage){
+
+        final int TRAINING_DATA_ROWS = (int) Math.round(TOTAL_NUM_OF_DATA_ROWS * percentage);
+        final int TESTING_DATA_ROWS = (int) Math.round(TOTAL_NUM_OF_DATA_ROWS - TOTAL_NUM_OF_DATA_ROWS * percentage);
+
+        this.trainingData = new String[TRAINING_DATA_ROWS][NUM_OF_DATA_FIELDS];
+        this.testingData = new String[TESTING_DATA_ROWS][NUM_OF_DATA_FIELDS];
+
+        System.arraycopy(this.stockData, 0, trainingData, 0, TRAINING_DATA_ROWS);
+        System.arraycopy(this.stockData,TRAINING_DATA_ROWS,testingData,0,TESTING_DATA_ROWS);
+
+        System.out.println("Training data"+trainingData.length);
+        printArray(trainingData);
+        System.out.println("Training data"+testingData.length);
+        printArray(testingData);
+    }
+
+    /**
+     * This method reads the csv files and creates a 2d array of stock Data
+     * @param path path of the csv file
+     */
+    public void fileReader(String path) {
+        AtomicInteger rowNumber= new AtomicInteger();
+        try (BufferedReader br = new BufferedReader(new FileReader(path))) {
+            br.lines()
+                    .skip(1) // Skip the header row
+                    .map(line -> line.split(","))
+                    .forEach(parts -> {
+                        if (parts.length != NUM_OF_DATA_FIELDS) {
+                            throw new IllegalArgumentException("Invalid number of fields in row");
+                        }
+                        System.out.println(parts[0]+ " "+ parts[1]+ " "+ parts[2]+ " "+ parts[3]+ " "+ parts[4]+ " "+ parts[5]+ " "+ parts[6]);
+                        System.arraycopy(parts, 0, stockData[rowNumber.getAndIncrement()], 0, NUM_OF_DATA_FIELDS);
+                    });
+        } catch (IOException e) {
+            throw new RuntimeException("Error reading file", e);
+        }
+    }
+
+    /**
+     * This is a utility function to calculate the total number correct predictions
+     * @param state state
+     * @param bestIndividual best individual of the current population
+     * @param threadnum number of thread
+     * @param input input
+     * @param hits number of hits
+     * @param expectedResult expected result
+     * @return number of hits
+     */
+    private int getHits(EvolutionState state, GPIndividual bestIndividual, int threadnum, DoubleData input, int hits, double expectedResult) {
+        bestIndividual.trees[0].child.eval(
+                state, threadnum, input, stack, bestIndividual, this);
+
+        double predictedResult = input.x;
+        if (Math.abs(predictedResult - expectedResult) < ACCEPTED_ERROR) {
+            hits++;
+        }
+        return hits;
+    }
+
+    /**
+     * This method converts the date string to a Simple Date Format
+     * @param dateString string date object
+     * @return SimpleDateFormate object of given date
+     */
+    private Date parseDate(String dateString) {
+        try {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            return dateFormat.parse(dateString);
+        } catch (ParseException e) {
+            throw new IllegalArgumentException("Error parsing date: " + dateString, e);
+        }
+    }
+
+    /**
+     * Prints the contents of the ground array.
+     */
+    public void printArray(String[][] data){
+        Arrays.stream(data)
+                .map(Arrays::toString)
+                .forEach(System.out::println);
     }
 }

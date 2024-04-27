@@ -6,7 +6,7 @@ gp.fs.0 = ec.gp.GPFunctionSet
 # We'll call the function set "f0".
 gp.fs.0.name = f0
 
-# We have five functions in the function set.  They are:
+# We have 13 functions in the function set.  They are:
 gp.fs.0.size = 13
 
 #functions created by us
