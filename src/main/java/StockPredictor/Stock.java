@@ -24,7 +24,7 @@ public class Stock extends GPProblem implements SimpleProblemForm {
     public String date;
     public double open, high, low, close, adjustedClose, volume;     //parameters of stock
     public static final String P_DATA = "data";
-    private static final double ACCEPTED_ERROR = 100;
+    private static final double ACCEPTED_ERROR = 1.0;
     private final int TOTAL_NUM_OF_DATA_ROWS = 9564; //total rows of data
     private final int NUM_OF_DATA_FIELDS = 7; //total columns of data
     String[][] stockData = new String[TOTAL_NUM_OF_DATA_ROWS][NUM_OF_DATA_FIELDS]; //2d array to store rice data
@@ -42,14 +42,15 @@ public class Stock extends GPProblem implements SimpleProblemForm {
      */
     @Override
     public void evaluate(EvolutionState evolutionState, Individual individual, int subPopulation, int threadNum) {
-        if(!individual.evaluated){
+
+        if (!individual.evaluated) {
+
+
             DoubleData input = (DoubleData) this.input;
-
+            double sum = 0;
             int hits = 0;
-            double sum = 0.0;
-            double expectedResult;
 
-            for(int i=0;i<stockData.length-2;i++){
+            for (int i = 0; i < stockData.length - 2; i++) {
 
                 //date = Double.parseDouble(stockData[i][0]);
                 open = Double.parseDouble(stockData[i][1]);
@@ -60,10 +61,10 @@ public class Stock extends GPProblem implements SimpleProblemForm {
                 volume = Double.parseDouble(stockData[i][6]);
 
                 //let's say we want to get the adjusted close right now for everyday
-                expectedResult = Double.parseDouble(stockData[i+1][1]);
+                double expectedResult = Double.parseDouble(stockData[i + 1][1]);
                 ((GPIndividual) individual).trees[0].child.eval(evolutionState, threadNum, this.input, this.stack, (GPIndividual) individual, this);
 
-                //System.out.println("expectedResult is "+expectedResult + " "+ "input is :"+input.x);
+                //System.out.println("expectedResult is " + expectedResult + " " + "input is :" + input.x);
                 double result = Math.abs(expectedResult - input.x);
 
                 if (result <= ACCEPTED_ERROR) {
@@ -71,15 +72,19 @@ public class Stock extends GPProblem implements SimpleProblemForm {
                     ++hits;
                 }
                 sum += result;
-
             }
+
+            double averageError = sum / (stockData.length - 1); // Average error
+            double fitness = 1 / (1 + averageError);
+
             //set koza statistics
             //hits = getHits(evolutionState, (GPIndividual) individual,threadNum,input,hits,expectedResult);
             KozaFitness kozaFitness = ((KozaFitness) individual.fitness);
-            kozaFitness.setStandardizedFitness(evolutionState,sum); //todo training data
+            kozaFitness.setStandardizedFitness(evolutionState, fitness);
             kozaFitness.hits = hits;
-            individual.evaluated = true;
-        }
+            individual.evaluated = true;        }
+
+
     }
 
     /**
@@ -142,10 +147,10 @@ public class Stock extends GPProblem implements SimpleProblemForm {
         System.arraycopy(this.stockData, 0, trainingData, 0, TRAINING_DATA_ROWS);
         System.arraycopy(this.stockData,TRAINING_DATA_ROWS,testingData,0,TESTING_DATA_ROWS);
 
-        System.out.println("Training data"+trainingData.length);
-        printArray(trainingData);
-        System.out.println("Training data"+testingData.length);
-        printArray(testingData);
+        //System.out.println("Training data"+trainingData.length);
+        //printArray(trainingData);
+        //System.out.println("Training data"+testingData.length);
+        //printArray(testingData);
     }
 
     /**
@@ -162,7 +167,7 @@ public class Stock extends GPProblem implements SimpleProblemForm {
                         if (parts.length != NUM_OF_DATA_FIELDS) {
                             throw new IllegalArgumentException("Invalid number of fields in row");
                         }
-                        System.out.println(parts[0]+ " "+ parts[1]+ " "+ parts[2]+ " "+ parts[3]+ " "+ parts[4]+ " "+ parts[5]+ " "+ parts[6]);
+                        //System.out.println(parts[0]+ " "+ parts[1]+ " "+ parts[2]+ " "+ parts[3]+ " "+ parts[4]+ " "+ parts[5]+ " "+ parts[6]);
                         System.arraycopy(parts, 0, stockData[rowNumber.getAndIncrement()], 0, NUM_OF_DATA_FIELDS);
                     });
         } catch (IOException e) {
