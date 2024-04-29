@@ -21,11 +21,13 @@ public class Stock extends GPProblem implements SimpleProblemForm {
     public double open, high, low, close, adjustedClose, volume, movingTenDayAvg, movingFiftyDayAvg;     //parameters of stock
     public static final String P_DATA = "data";
     private static final double ACCEPTED_ERROR = 0.05;
-    private final int TOTAL_NUM_OF_DATA_ROWS = 9564; //total rows of data
+    private static final double PROBABLY_ZERO = 1.11E-15;
+    private static final double BIG_NUMBER = 1.0E15;
+    private final int TOTAL_NUM_OF_DATA_ROWS = 1087; //total rows of data
     private final int NUM_OF_DATA_FIELDS = 7; //total columns of data
     String[][] stockData = new String[TOTAL_NUM_OF_DATA_ROWS][NUM_OF_DATA_FIELDS]; //2d array to store rice data
     String[][] trainingData, testingData;
-    private final String PATH = "src/main/data/MSFT.csv";
+    private final String PATH = "src/main/data/AAPL.csv";
 
 
     /**
@@ -49,35 +51,46 @@ public class Stock extends GPProblem implements SimpleProblemForm {
                 this.open = Double.parseDouble(trainingData[i][1]);
                 this.high = Double.parseDouble(trainingData[i][2]);
                 this.low = Double.parseDouble(trainingData[i][3]);
-                this.close = Double.parseDouble(trainingData[i][4]);
+                //this.close = Double.parseDouble(trainingData[i][4]);
                 this.adjustedClose = Double.parseDouble(trainingData[i][5]);
                 this.volume = Double.parseDouble(trainingData[i][6]);
-                this.movingTenDayAvg = tenDayMovingAvg(trainingData,i,5);
-                this.movingFiftyDayAvg = fiftyDayMovingAvg(trainingData,i,5);
-                //System.out.println("adjusted close : "+adjustedClose+" moving 10 : "+movingTenDayAvg);
-                //let's say we want to get the adjusted close right now for everyday
+                this.movingTenDayAvg = nDayMovingAverage(trainingData,10,i,5);
+                this.movingFiftyDayAvg = nDayMovingAverage(trainingData,50,i,5);
+
                 double expectedResult = Double.parseDouble(trainingData[i + 1][1]);
+
+                System.out.println("row : "+i+" adjusted close : "+adjustedClose+" moving 10 : "+movingTenDayAvg + " moving 50 : "+movingFiftyDayAvg);
+                //let's say we want to get the adjusted close right now for everyday
+
                 ((GPIndividual) individual).trees[0].child.eval(evolutionState, threadNum, this.input, this.stack, (GPIndividual) individual, this);
 
-                double currentError = Math.abs(expectedResult - input.x);
+                double result = Math.abs(expectedResult - input.x); //todo
                 double currentErrorRatio = Math.abs(expectedResult - input.x)/expectedResult;
 
-                //System.out.println("current value: "+input.x+"\nexpectedResult: " + expectedResult+"\nerror: "+currentErrorRatio*100);
-                if (currentErrorRatio <= ACCEPTED_ERROR) {
+                //System.out.println("current value: "+input.x+"\nexpectedResult: " + expectedResult);
+
+
+                if (!(result < BIG_NUMBER)) {
+                    result = BIG_NUMBER;
+                } else if (result < PROBABLY_ZERO) {
+                    result = 0.0;
+                }
+
+                if (result <= ACCEPTED_ERROR) {
                     ++hits;
                 }
-                sum+=currentError;
+                sum+=result;
             }
 
             //set koza statistics
             //hits = getHits(evolutionState, (GPIndividual) individual,threadNum,input,hits,expectedResult);
             KozaFitness kozaFitness = ((KozaFitness) individual.fitness);
+            //System.out.println("sum is : "+sum);
             kozaFitness.setStandardizedFitness(evolutionState, sum);
             kozaFitness.hits = hits;
             individual.evaluated = true;
         }
     }
-
 
 
     /**
@@ -89,51 +102,52 @@ public class Stock extends GPProblem implements SimpleProblemForm {
      * @param threadnum     The thread number.
      * @param log           Additional parameter (not used).
      */
-    @Override
-    public void describe(EvolutionState state, Individual bestIndividual, int subpopulation, int threadnum, int log) {
-        super.describe(state, bestIndividual, subpopulation, threadnum, log);
-        System.out.println("running describe");
-        if (!bestIndividual.evaluated) {
-            DoubleData input = (DoubleData) this.input;
-            double sum = 0;
-            int hits = 0;
-
-            for (int i = 0; i < testingData.length - 2; i++) {
-
-                //date = Double.parseDouble(stockData[i][0]);
-                this.open = Double.parseDouble(testingData[i][1]);
-                this.high = Double.parseDouble(testingData[i][2]);
-                this.low = Double.parseDouble(testingData[i][3]);
-                this.close = Double.parseDouble(testingData[i][4]);
-                this.adjustedClose = Double.parseDouble(testingData[i][5]);
-                this.volume = Double.parseDouble(testingData[i][6]);
-                this.movingTenDayAvg = tenDayMovingAvg(testingData,i,5);
-                this.movingFiftyDayAvg = fiftyDayMovingAvg(testingData,i,5);
-
-                //let's say we want to get the adjusted close right now for everyday
-                double expectedResult = Double.parseDouble(testingData[i + 1][1]);
-                ((GPIndividual) bestIndividual).trees[0].child.eval(state, threadnum, this.input, this.stack, (GPIndividual) bestIndividual, this);
-
-                double currentError = Math.abs(expectedResult - input.x);
-
-                //System.out.println("current value: "+input.x+"\nexpectedResult: " + expectedResult);
-
-                if (currentError <= ACCEPTED_ERROR) {
-                    //System.out.println(hits+" hits");
-                    ++hits;
-                }
-                sum += currentError;
-
-            }
-
-            //set koza statistics
-            //hits = getHits(evolutionState, (GPIndividual) individual,threadNum,input,hits,expectedResult);
-            KozaFitness kozaFitness = ((KozaFitness) bestIndividual.fitness);
-            kozaFitness.setStandardizedFitness(state, sum);
-            kozaFitness.hits = hits;
-            bestIndividual.evaluated = true;
-        }
-    }
+//    @Override
+//    public void describe(EvolutionState state, Individual bestIndividual, int subpopulation, int threadnum, int log) {
+//        super.describe(state, bestIndividual, subpopulation, threadnum, log);
+//        System.out.println("running describe");
+//        if (!bestIndividual.evaluated) {
+//            DoubleData input = (DoubleData) this.input;
+//            double sum = 0;
+//            int hits = 0;
+//
+//            for (int i = 0; i < testingData.length - 2; i++) {
+//
+//                //date = Double.parseDouble(stockData[i][0]);
+//                this.open = Double.parseDouble(testingData[i][1]);
+//                this.high = Double.parseDouble(testingData[i][2]);
+//                this.low = Double.parseDouble(testingData[i][3]);
+//                this.close = Double.parseDouble(testingData[i][4]);
+//                this.adjustedClose = Double.parseDouble(testingData[i][5]);
+//                this.volume = Double.parseDouble(testingData[i][6]);
+//                this.movingTenDayAvg = tenDayMovingAvg(testingData,i,5);
+//                this.movingFiftyDayAvg = fiftyDayMovingAvg(testingData,i,5);
+//
+//                //let's say we want to get the adjusted close right now for everyday
+//                double expectedResult = Double.parseDouble(testingData[i + 1][1]);
+//                ((GPIndividual) bestIndividual).trees[0].child.eval(state, threadnum, this.input, this.stack, (GPIndividual) bestIndividual, this);
+//
+//                double currentError = Math.abs(expectedResult - input.x);
+//                double currentErrorRatio = Math.abs(expectedResult - input.x)/expectedResult;
+//
+//
+//                System.out.println("current value: "+input.x+"\nexpectedResult: " + expectedResult);
+//
+//                if (currentErrorRatio <= ACCEPTED_ERROR) {
+//                    ++hits;
+//                }
+//                sum += currentError;
+//
+//            }
+//
+//            //set koza statistics
+//            //hits = getHits(evolutionState, (GPIndividual) individual,threadNum,input,hits,expectedResult);
+//            KozaFitness kozaFitness = ((KozaFitness) bestIndividual.fitness);
+//            kozaFitness.setStandardizedFitness(state, sum);
+//            kozaFitness.hits = hits;
+//            bestIndividual.evaluated = true;
+//        }
+//    }
     /**
      * This method setups the GA problem by reading the data file and initializing the problem
      * @param state current state
@@ -191,7 +205,8 @@ public class Stock extends GPProblem implements SimpleProblemForm {
             throw new RuntimeException("Error reading file", e);
         }
 
-        splitData(0.5);
+        this.trainingData = stockData;
+        //splitData(0.9);
     }
 
     /**
@@ -224,53 +239,39 @@ public class Stock extends GPProblem implements SimpleProblemForm {
                 .forEach(System.out::println);
     }
 
-    private double tenDayMovingAvg(String[][] stockData, int row, int col){
-        // if the values are first 10 rows
-        if(row < 10){
-            double sum = 0;
-            for(int i = 0; i < row; i++){
-                sum += Double.parseDouble(stockData[i][col]);
-            }
-            return sum / row;
+    /**
+     * This method calculated the n-day moving average, if the data is <n-day it will return moving avg
+     * till return data.length as n day length
+     * @param data stock data
+     * @param nDay n days moving avg. e.g. past 10 day moving average
+     * @param row row's from which moving avg will be calculated
+     * @param col col's for which moving avg will be calculated
+     * @return moving average of given data
+     */
+    private double nDayMovingAverage(String[][] data, int nDay, int row, int col){
+        if(row == 0){
+            return Double.parseDouble(data[row][col]);
         }
-        // if the values are last 10 rows
-        if(row + 10 > stockData.length){
-            double sum = 0;
-            for(int i = row; i < stockData.length; i++){
-                sum += Double.parseDouble(stockData[i][col]);
-            }
-            return sum / (stockData.length - row);
-        }
-        double sum = 0;
-        for(int i = row; i < row + 10; i++){
-            sum += Double.parseDouble(stockData[i][col]);
-        }
-        return sum / 10;
-    }
-
-
-    private double fiftyDayMovingAvg(String[][] stockData, int row, int col){
-        //if the values are first 50 rows
-        if(row<50){
+        if(row<nDay){
             double sum = 0;
             for(int i=0;i<row;i++){
-                sum+=Double.parseDouble(stockData[i][col]);
+                sum+=Double.parseDouble(data[i][col]);
             }
             return sum/row;
         }
-        //if the values are last 10 rows
-        if(row+50>stockData.length){
+        if(row+nDay>data.length){
             double sum = 0;
-            for(int i=row;i<stockData.length;i++){
-                sum += Double.parseDouble(stockData[i][col]);
+            for(int i=row;i<data.length-1;i++){ //todo check
+                sum += Double.parseDouble(data[i][col]);
             }
-            return sum/(stockData.length-row);
+            return sum/(data.length-row);
         }
+
         double sum = 0;
 
-        for(int i=row;i<row+50;i++){
-            sum+= Double.parseDouble(stockData[i][col]);
+        for(int i=row;i<row+nDay;i++){
+            sum+= Double.parseDouble(data[i][col]);
         }
-        return sum;
+        return sum/nDay;
     }
 }
