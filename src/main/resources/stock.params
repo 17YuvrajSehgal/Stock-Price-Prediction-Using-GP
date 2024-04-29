@@ -44,22 +44,22 @@ gp.fs.0.func.13.nc = nc0
 gp.fs.0.func.14 = terminal.MovingFiftyDayAvg
 gp.fs.0.func.14.nc = nc0
 
-#gp.fs.0.func.13 = functions.Sin
-#gp.fs.0.func.13.nc = nc1
-#gp.fs.0.func.14 = functions.Cos
-#gp.fs.0.func.14.nc = nc1
-#gp.fs.0.func.15 = functions.Cosec
+#gp.fs.0.func.15 = functions.Sin
 #gp.fs.0.func.15.nc = nc1
-#gp.fs.0.func.16 = functions.Cot
+#gp.fs.0.func.16 = functions.Cos
 #gp.fs.0.func.16.nc = nc1
-#gp.fs.0.func.17 = functions.Sec
+#gp.fs.0.func.17 = functions.Cosec
 #gp.fs.0.func.17.nc = nc1
-#gp.fs.0.func.18 = functions.Tan
+#gp.fs.0.func.18 = functions.Cot
 #gp.fs.0.func.18.nc = nc1
+#gp.fs.0.func.19 = functions.Sec
+#gp.fs.0.func.19.nc = nc1
+#gp.fs.0.func.20 = functions.Tan
+#gp.fs.0.func.20.nc = nc1
 
-pop.subpop.0.size = 100
+pop.subpop.0.size = 500
 
-generations = 100
+generations = 10
 
 
 eval.problem = StockPredictor.Stock

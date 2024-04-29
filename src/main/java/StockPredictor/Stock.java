@@ -20,14 +20,14 @@ public class Stock extends GPProblem implements SimpleProblemForm {
     //public String date;
     public double open, high, low, close, adjustedClose, volume, movingTenDayAvg, movingFiftyDayAvg;     //parameters of stock
     public static final String P_DATA = "data";
-    private static final double ACCEPTED_ERROR = 0.05;
+    private static final double ACCEPTED_ERROR = 0.005;
     private static final double PROBABLY_ZERO = 1.11E-15;
     private static final double BIG_NUMBER = 1.0E15;
-    private final int TOTAL_NUM_OF_DATA_ROWS = 1087; //total rows of data
+    private final int TOTAL_NUM_OF_DATA_ROWS = 9563; //total rows of data
     private final int NUM_OF_DATA_FIELDS = 7; //total columns of data
     String[][] stockData = new String[TOTAL_NUM_OF_DATA_ROWS][NUM_OF_DATA_FIELDS]; //2d array to store rice data
     String[][] trainingData, testingData;
-    private final String PATH = "src/main/data/AAPL.csv";
+    private final String PATH = "src/main/data/MSFT.csv";
 
 
     /**
@@ -51,35 +51,32 @@ public class Stock extends GPProblem implements SimpleProblemForm {
                 this.open = Double.parseDouble(trainingData[i][1]);
                 this.high = Double.parseDouble(trainingData[i][2]);
                 this.low = Double.parseDouble(trainingData[i][3]);
-                //this.close = Double.parseDouble(trainingData[i][4]);
+                this.close = Double.parseDouble(trainingData[i][4]);
                 this.adjustedClose = Double.parseDouble(trainingData[i][5]);
                 this.volume = Double.parseDouble(trainingData[i][6]);
-                this.movingTenDayAvg = nDayMovingAverage(trainingData,10,i,5);
-                this.movingFiftyDayAvg = nDayMovingAverage(trainingData,50,i,5);
+                this.movingTenDayAvg = nDayMovingAverage2(trainingData, 10, i, 5);
+                this.movingFiftyDayAvg = nDayMovingAverage2(trainingData, 50, i, 5);
 
                 double expectedResult = Double.parseDouble(trainingData[i + 1][1]);
 
-                System.out.println("row : "+i+" adjusted close : "+adjustedClose+" moving 10 : "+movingTenDayAvg + " moving 50 : "+movingFiftyDayAvg);
+                //System.out.println("row : "+i+" adjusted close : "+adjustedClose+" moving 10 : "+movingTenDayAvg + " moving 50 : "+movingFiftyDayAvg);
                 //let's say we want to get the adjusted close right now for everyday
 
                 ((GPIndividual) individual).trees[0].child.eval(evolutionState, threadNum, this.input, this.stack, (GPIndividual) individual, this);
 
                 double result = Math.abs(expectedResult - input.x); //todo
-                double currentErrorRatio = Math.abs(expectedResult - input.x)/expectedResult;
+                double currentErrorRatio = Math.abs(expectedResult - input.x) / expectedResult;
 
                 //System.out.println("current value: "+input.x+"\nexpectedResult: " + expectedResult);
-
-
                 if (!(result < BIG_NUMBER)) {
                     result = BIG_NUMBER;
                 } else if (result < PROBABLY_ZERO) {
                     result = 0.0;
                 }
-
-                if (result <= ACCEPTED_ERROR) {
+                if (currentErrorRatio <= ACCEPTED_ERROR) {
                     ++hits;
                 }
-                sum+=result;
+                sum += result;
             }
 
             //set koza statistics
@@ -148,10 +145,12 @@ public class Stock extends GPProblem implements SimpleProblemForm {
 //            bestIndividual.evaluated = true;
 //        }
 //    }
+
     /**
      * This method setups the GA problem by reading the data file and initializing the problem
+     *
      * @param state current state
-     * @param base current base
+     * @param base  current base
      */
     @Override
     public void setup(final EvolutionState state, final Parameter base) {
@@ -165,9 +164,10 @@ public class Stock extends GPProblem implements SimpleProblemForm {
 
     /**
      * This method splits the data into 2 arrays. the testing and training array
+     *
      * @param percentage percentage of data to put in training and remaining in testing
      */
-    public void splitData(double percentage){
+    public void splitData(double percentage) {
 
         final int TRAINING_DATA_ROWS = (int) Math.round(TOTAL_NUM_OF_DATA_ROWS * percentage);
         final int TESTING_DATA_ROWS = (int) Math.round(TOTAL_NUM_OF_DATA_ROWS - TOTAL_NUM_OF_DATA_ROWS * percentage);
@@ -176,7 +176,7 @@ public class Stock extends GPProblem implements SimpleProblemForm {
         this.testingData = new String[TESTING_DATA_ROWS][NUM_OF_DATA_FIELDS];
 
         System.arraycopy(this.stockData, 0, trainingData, 0, TRAINING_DATA_ROWS);
-        System.arraycopy(this.stockData,TRAINING_DATA_ROWS,testingData,0,TESTING_DATA_ROWS);
+        System.arraycopy(this.stockData, TRAINING_DATA_ROWS, testingData, 0, TESTING_DATA_ROWS);
 
         //System.out.println("Training data"+trainingData.length);
         //printArray(trainingData);
@@ -186,10 +186,11 @@ public class Stock extends GPProblem implements SimpleProblemForm {
 
     /**
      * This method reads the csv files and creates a 2d array of stock Data
+     *
      * @param path path of the csv file
      */
     public void fileReader(String path) {
-        AtomicInteger rowNumber= new AtomicInteger();
+        AtomicInteger rowNumber = new AtomicInteger();
         try (BufferedReader br = new BufferedReader(new FileReader(path))) {
             br.lines()
                     .skip(1) // Skip the header row
@@ -211,11 +212,12 @@ public class Stock extends GPProblem implements SimpleProblemForm {
 
     /**
      * This is a utility function to calculate the total number correct predictions
-     * @param state state
+     *
+     * @param state          state
      * @param bestIndividual best individual of the current population
-     * @param threadnum number of thread
-     * @param input input
-     * @param hits number of hits
+     * @param threadnum      number of thread
+     * @param input          input
+     * @param hits           number of hits
      * @param expectedResult expected result
      * @return number of hits
      */
@@ -233,7 +235,7 @@ public class Stock extends GPProblem implements SimpleProblemForm {
     /**
      * Prints the contents of the ground array.
      */
-    public void printArray(String[][] data){
+    public void printArray(String[][] data) {
         Arrays.stream(data)
                 .map(Arrays::toString)
                 .forEach(System.out::println);
@@ -242,36 +244,51 @@ public class Stock extends GPProblem implements SimpleProblemForm {
     /**
      * This method calculated the n-day moving average, if the data is <n-day it will return moving avg
      * till return data.length as n day length
+     *
      * @param data stock data
      * @param nDay n days moving avg. e.g. past 10 day moving average
-     * @param row row's from which moving avg will be calculated
-     * @param col col's for which moving avg will be calculated
+     * @param row  row's from which moving avg will be calculated
+     * @param col  col's for which moving avg will be calculated
      * @return moving average of given data
      */
-    private double nDayMovingAverage(String[][] data, int nDay, int row, int col){
-        if(row == 0){
+    private double nDayMovingAverage(String[][] data, int nDay, int row, int col) {
+        if (row == 0) {
             return Double.parseDouble(data[row][col]);
         }
-        if(row<nDay){
+        if (row < nDay) {
             double sum = 0;
-            for(int i=0;i<row;i++){
-                sum+=Double.parseDouble(data[i][col]);
-            }
-            return sum/row;
-        }
-        if(row+nDay>data.length){
-            double sum = 0;
-            for(int i=row;i<data.length-1;i++){ //todo check
+            for (int i = 0; i < row; i++) {
                 sum += Double.parseDouble(data[i][col]);
             }
-            return sum/(data.length-row);
+            return sum / row;
+        }
+        if (row + nDay > data.length) {
+            double sum = 0;
+            for (int i = row; i < data.length - 1; i++) { //todo check
+                sum += Double.parseDouble(data[i][col]);
+            }
+            return sum / (data.length - row);
         }
 
         double sum = 0;
 
-        for(int i=row;i<row+nDay;i++){
-            sum+= Double.parseDouble(data[i][col]);
+        for (int i = row; i < row + nDay; i++) {
+            sum += Double.parseDouble(data[i][col]);
         }
-        return sum/nDay;
+        return sum / nDay;
+    }
+
+    private double nDayMovingAverage2(String[][] data, int nDay, int row, int col) {
+        if (row < nDay - 1) {
+            return -1; // or some other indicator that there isn't enough data to calculate the moving average
+        }
+
+        double sum = 0;
+
+        for (int i = row - nDay + 1; i <= row; i++) {
+            sum += Double.parseDouble(data[i][col]);
+        }
+
+        return sum / nDay;
     }
 }
