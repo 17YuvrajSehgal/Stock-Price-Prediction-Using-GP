@@ -11,7 +11,7 @@ import terminal.DoubleData;
 
 public class Sec extends GPNode {
 
-    public String toString() { return "cos"; }
+    public String toString() { return "sec"; }
 
     public int expectedChildren() { return 1; }
 

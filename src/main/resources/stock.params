@@ -12,47 +12,49 @@ gp.fs.0.size = 13
 #functions created by us
 gp.fs.0.func.0 = functions.Min
 gp.fs.0.func.0.nc = nc2
-gp.fs.0.func.1 = functions.Mul
+gp.fs.0.func.1 = functions.Max
 gp.fs.0.func.1.nc = nc2
-gp.fs.0.func.2 = functions.Add
+gp.fs.0.func.2 = functions.Mul
 gp.fs.0.func.2.nc = nc2
-gp.fs.0.func.3 = functions.Sub
+gp.fs.0.func.3 = functions.Add
 gp.fs.0.func.3.nc = nc2
-gp.fs.0.func.4 = functions.Div
+gp.fs.0.func.4 = functions.Sub
 gp.fs.0.func.4.nc = nc2
-gp.fs.0.func.5 = functions.Ephemeral
-gp.fs.0.func.5.nc = nc0
-gp.fs.0.func.6 = functions.Sin
-gp.fs.0.func.6.nc = nc1
-gp.fs.0.func.7 = functions.Cos
-gp.fs.0.func.7.nc = nc1
-gp.fs.0.func.8 = functions.Cosec
-gp.fs.0.func.8.nc = nc1
-gp.fs.0.func.9 = functions.Cot
-gp.fs.0.func.9.nc = nc1
-gp.fs.0.func.10 = functions.Sec
-gp.fs.0.func.10.nc = nc1
-gp.fs.0.func.11 = functions.Tan
-gp.fs.0.func.11.nc = nc1
-gp.fs.0.func.12 = functions.Max
-gp.fs.0.func.12.nc = nc2
+gp.fs.0.func.5 = functions.Div
+gp.fs.0.func.5.nc = nc2
 
-gp.fs.0.func.13 = terminal.Open
-gp.fs.0.func.13.nc = nc0
-gp.fs.0.func.14 = terminal.High
-gp.fs.0.func.14.nc = nc0
-gp.fs.0.func.15 = terminal.Low
-gp.fs.0.func.15.nc = nc0
-gp.fs.0.func.16 = terminal.Close
-gp.fs.0.func.16.nc = nc0
-gp.fs.0.func.17 = terminal.AdjustedClose
-gp.fs.0.func.17.nc = nc0
-gp.fs.0.func.18 = terminal.Volume
-gp.fs.0.func.18.nc = nc0
+gp.fs.0.func.6 = terminal.Open
+gp.fs.0.func.6.nc = nc0
+gp.fs.0.func.7 = terminal.High
+gp.fs.0.func.7.nc = nc0
+gp.fs.0.func.8 = terminal.Low
+gp.fs.0.func.8.nc = nc0
+gp.fs.0.func.9 = terminal.Close
+gp.fs.0.func.9.nc = nc0
+gp.fs.0.func.10 = terminal.AdjustedClose
+gp.fs.0.func.10.nc = nc0
+gp.fs.0.func.11 = terminal.Volume
+gp.fs.0.func.11.nc = nc0
 
-pop.subpop.0.size = 500
+gp.fs.0.func.12 = functions.Ephemeral
+gp.fs.0.func.12.nc = nc0
 
-generations = 10
+#gp.fs.0.func.13 = functions.Sin
+#gp.fs.0.func.13.nc = nc1
+#gp.fs.0.func.14 = functions.Cos
+#gp.fs.0.func.14.nc = nc1
+#gp.fs.0.func.15 = functions.Cosec
+#gp.fs.0.func.15.nc = nc1
+#gp.fs.0.func.16 = functions.Cot
+#gp.fs.0.func.16.nc = nc1
+#gp.fs.0.func.17 = functions.Sec
+#gp.fs.0.func.17.nc = nc1
+#gp.fs.0.func.18 = functions.Tan
+#gp.fs.0.func.18.nc = nc1
+
+pop.subpop.0.size = 50
+
+generations = 50
 
 
 eval.problem = StockPredictor.Stock

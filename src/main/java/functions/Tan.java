@@ -11,7 +11,7 @@ import terminal.DoubleData;
 
 public class Tan extends GPNode {
 
-    public String toString() { return "cos"; }
+    public String toString() { return "tan"; }
 
     public int expectedChildren() { return 1; }
 

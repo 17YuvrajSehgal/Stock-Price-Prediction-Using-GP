@@ -11,7 +11,7 @@ import terminal.DoubleData;
 
 public class Cot extends GPNode {
 
-    public String toString() { return "cos"; }
+    public String toString() { return "cot"; }
 
     public int expectedChildren() { return 1; }
 

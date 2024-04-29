@@ -25,7 +25,7 @@ public class Div extends GPNode {
 		DoubleData rd = ((DoubleData)(input));
 
 	    children[1].eval(state,thread,input,stack,individual,problem);
-	    if (Math.abs(rd.x) < 0.0001) {
+	    if (Math.abs(rd.x) < 0.000000001) {
 	    	rd.x = 1;
 	    } else {
 	    	double result;

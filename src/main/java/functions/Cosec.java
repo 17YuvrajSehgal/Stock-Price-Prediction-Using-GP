@@ -11,7 +11,7 @@ import terminal.DoubleData;
 
 public class Cosec extends GPNode {
 
-    public String toString() { return "cos"; }
+    public String toString() { return "cosec"; }
 
     public int expectedChildren() { return 1; }
 
