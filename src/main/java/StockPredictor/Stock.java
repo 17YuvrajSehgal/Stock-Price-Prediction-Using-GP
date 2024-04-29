@@ -225,29 +225,29 @@ public class Stock extends GPProblem implements SimpleProblemForm {
     }
 
     private double tenDayMovingAvg(String[][] stockData, int row, int col){
-        //if the values are first 10 rows
-        if(row<10){
+        // if the values are first 10 rows
+        if(row < 10){
             double sum = 0;
-            for(int i=0;i<row;i++){
-                sum+=Double.parseDouble(stockData[i][col]);
-            }
-            return sum/row;
-        }
-        //if the values are last 10 rows
-        if(row+10>stockData.length){
-            double sum = 0;
-            for(int i=row;i<stockData.length;i++){
+            for(int i = 0; i < row; i++){
                 sum += Double.parseDouble(stockData[i][col]);
             }
-            return sum/(stockData.length-row);
+            return sum / row;
+        }
+        // if the values are last 10 rows
+        if(row + 10 > stockData.length){
+            double sum = 0;
+            for(int i = row; i < stockData.length; i++){
+                sum += Double.parseDouble(stockData[i][col]);
+            }
+            return sum / (stockData.length - row);
         }
         double sum = 0;
-
-        for(int i=row;i<row+10;i++){
-            sum+= Double.parseDouble(stockData[i][col]);
+        for(int i = row; i < row + 10; i++){
+            sum += Double.parseDouble(stockData[i][col]);
         }
-        return sum;
+        return sum / 10;
     }
+
 
     private double fiftyDayMovingAvg(String[][] stockData, int row, int col){
         //if the values are first 50 rows
