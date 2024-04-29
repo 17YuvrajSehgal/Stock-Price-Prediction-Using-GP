@@ -12,17 +12,13 @@ import terminal.DoubleData;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Logger;
 
 public class Stock extends GPProblem implements SimpleProblemForm {
 
     //public String date;
-    public double open, high, low, close, adjustedClose, volume;     //parameters of stock
+    public double open, high, low, close, adjustedClose, volume, movingTenDayAvg, movingFiftyDayAvg;     //parameters of stock
     public static final String P_DATA = "data";
     private static final double ACCEPTED_ERROR = 0.05;
     private final int TOTAL_NUM_OF_DATA_ROWS = 9564; //total rows of data
@@ -50,13 +46,15 @@ public class Stock extends GPProblem implements SimpleProblemForm {
             for (int i = 0; i < trainingData.length - 2; i++) {
 
                 //date = Double.parseDouble(stockData[i][0]);
-                open = Double.parseDouble(trainingData[i][1]);
-                high = Double.parseDouble(trainingData[i][2]);
-                low = Double.parseDouble(trainingData[i][3]);
-                close = Double.parseDouble(trainingData[i][4]);
-                adjustedClose = Double.parseDouble(trainingData[i][5]);
-                volume = Double.parseDouble(trainingData[i][6]);
-
+                this.open = Double.parseDouble(trainingData[i][1]);
+                this.high = Double.parseDouble(trainingData[i][2]);
+                this.low = Double.parseDouble(trainingData[i][3]);
+                this.close = Double.parseDouble(trainingData[i][4]);
+                this.adjustedClose = Double.parseDouble(trainingData[i][5]);
+                this.volume = Double.parseDouble(trainingData[i][6]);
+                this.movingTenDayAvg = tenDayMovingAvg(trainingData,i,5);
+                this.movingFiftyDayAvg = fiftyDayMovingAvg(trainingData,i,5);
+                //System.out.println("adjusted close : "+adjustedClose+" moving 10 : "+movingTenDayAvg);
                 //let's say we want to get the adjusted close right now for everyday
                 double expectedResult = Double.parseDouble(trainingData[i + 1][1]);
                 ((GPIndividual) individual).trees[0].child.eval(evolutionState, threadNum, this.input, this.stack, (GPIndividual) individual, this);
@@ -64,11 +62,8 @@ public class Stock extends GPProblem implements SimpleProblemForm {
                 double currentError = Math.abs(expectedResult - input.x);
                 double currentErrorRatio = Math.abs(expectedResult - input.x)/expectedResult;
 
-
                 //System.out.println("current value: "+input.x+"\nexpectedResult: " + expectedResult+"\nerror: "+currentErrorRatio*100);
-
-                if (currentError <= ACCEPTED_ERROR) {
-                    //System.out.println(hits+" hits");
+                if (currentErrorRatio <= ACCEPTED_ERROR) {
                     ++hits;
                 }
                 sum+=currentError;
@@ -106,12 +101,14 @@ public class Stock extends GPProblem implements SimpleProblemForm {
             for (int i = 0; i < testingData.length - 2; i++) {
 
                 //date = Double.parseDouble(stockData[i][0]);
-                open = Double.parseDouble(testingData[i][1]);
-                high = Double.parseDouble(testingData[i][2]);
-                low = Double.parseDouble(testingData[i][3]);
-                close = Double.parseDouble(testingData[i][4]);
-                adjustedClose = Double.parseDouble(testingData[i][5]);
-                volume = Double.parseDouble(testingData[i][6]);
+                this.open = Double.parseDouble(testingData[i][1]);
+                this.high = Double.parseDouble(testingData[i][2]);
+                this.low = Double.parseDouble(testingData[i][3]);
+                this.close = Double.parseDouble(testingData[i][4]);
+                this.adjustedClose = Double.parseDouble(testingData[i][5]);
+                this.volume = Double.parseDouble(testingData[i][6]);
+                this.movingTenDayAvg = tenDayMovingAvg(testingData,i,5);
+                this.movingFiftyDayAvg = fiftyDayMovingAvg(testingData,i,5);
 
                 //let's say we want to get the adjusted close right now for everyday
                 double expectedResult = Double.parseDouble(testingData[i + 1][1]);
@@ -219,25 +216,61 @@ public class Stock extends GPProblem implements SimpleProblemForm {
     }
 
     /**
-     * This method converts the date string to a Simple Date Format
-     * @param dateString string date object
-     * @return SimpleDateFormate object of given date
-     */
-    private Date parseDate(String dateString) {
-        try {
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-            return dateFormat.parse(dateString);
-        } catch (ParseException e) {
-            throw new IllegalArgumentException("Error parsing date: " + dateString, e);
-        }
-    }
-
-    /**
      * Prints the contents of the ground array.
      */
     public void printArray(String[][] data){
         Arrays.stream(data)
                 .map(Arrays::toString)
                 .forEach(System.out::println);
+    }
+
+    private double tenDayMovingAvg(String[][] stockData, int row, int col){
+        //if the values are first 10 rows
+        if(row<10){
+            double sum = 0;
+            for(int i=0;i<row;i++){
+                sum+=Double.parseDouble(stockData[i][col]);
+            }
+            return sum/row;
+        }
+        //if the values are last 10 rows
+        if(row+10>stockData.length){
+            double sum = 0;
+            for(int i=row;i<stockData.length;i++){
+                sum += Double.parseDouble(stockData[i][col]);
+            }
+            return sum/(stockData.length-row);
+        }
+        double sum = 0;
+
+        for(int i=row;i<row+10;i++){
+            sum+= Double.parseDouble(stockData[i][col]);
+        }
+        return sum;
+    }
+
+    private double fiftyDayMovingAvg(String[][] stockData, int row, int col){
+        //if the values are first 50 rows
+        if(row<50){
+            double sum = 0;
+            for(int i=0;i<row;i++){
+                sum+=Double.parseDouble(stockData[i][col]);
+            }
+            return sum/row;
+        }
+        //if the values are last 10 rows
+        if(row+50>stockData.length){
+            double sum = 0;
+            for(int i=row;i<stockData.length;i++){
+                sum += Double.parseDouble(stockData[i][col]);
+            }
+            return sum/(stockData.length-row);
+        }
+        double sum = 0;
+
+        for(int i=row;i<row+50;i++){
+            sum+= Double.parseDouble(stockData[i][col]);
+        }
+        return sum;
     }
 }
