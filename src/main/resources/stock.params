@@ -53,9 +53,9 @@ gp.fs.0.func.12.nc = nc0
 #gp.fs.0.func.20 = functions.Tan
 #gp.fs.0.func.20.nc = nc1
 
-pop.subpop.0.size = 500
+pop.subpop.0.size = 100
 
-generations = 100
+generations = 10
 
 
 eval.problem = StockPredictor.Stock

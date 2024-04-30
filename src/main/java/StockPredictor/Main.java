@@ -9,7 +9,7 @@ public class Main {
     private static final String PATH = "src/main/data/SandP500.csv";
     public static void main(String[] args) {
         String pathToFiles = "src/main/results/";
-        int numberOfJobs = 10;
+        int numberOfJobs = 1;
         String statisticType1 = "ec.gp.koza.KozaShortStatistics";
         String statisticType2 = "ec.simple.SimpleStatistics";
 
