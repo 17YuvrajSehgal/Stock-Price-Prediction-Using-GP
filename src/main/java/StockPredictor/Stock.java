@@ -25,7 +25,7 @@ public class Stock extends GPProblem implements SimpleProblemForm {
     private static final double ACCEPTED_ERROR = 0.01;
     private static final double PROBABLY_ZERO = 1.11E-15;
     private static final double BIG_NUMBER = 1.0E15;
-    private static final int TOTAL_NUM_OF_DATA_ROWS = 18697; //total rows of data
+    private static final int TOTAL_NUM_OF_DATA_ROWS = 6358; //total rows of data
     private static final int NUM_OF_DATA_FIELDS = 7; //total columns of data
     private static final int NUM_OF_STOCKS_BUY = 100;
     String[][] stockData = new String[TOTAL_NUM_OF_DATA_ROWS][NUM_OF_DATA_FIELDS]; //2d array to store rice data
@@ -34,7 +34,7 @@ public class Stock extends GPProblem implements SimpleProblemForm {
     private static final double initialAccountBalance = 1000000;
     private int totalStockHold = 100;
 
-    private final String PATH = "src/main/data/SandP500.csv";
+    private final String PATH = "src/main/data/NVDA.csv";
 
 
     /**
@@ -171,6 +171,11 @@ public class Stock extends GPProblem implements SimpleProblemForm {
                     state.output.println("Selling " + NUM_OF_STOCKS_BUY + " stocks @" + testingData[i][4] + "$/stock," +
                             " current account balance: " + account_balance + " current net profit : " + netProfit+" current " +
                             "net worth of account : "+netWorth, log);
+                }
+                if(i==testingData.length-1){
+                    double netWorth = totalStockHold*Double.parseDouble(testingData[i][4]);
+                    state.output.println("\n\nEnd of training data has been reached, current portfolio contains "+totalStockHold+" number" +
+                            "of stocks. Total Worth: "+netWorth,log);
                 }
             }
 
