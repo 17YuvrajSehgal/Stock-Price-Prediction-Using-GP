@@ -20,14 +20,14 @@ public class Stock extends GPProblem implements SimpleProblemForm {
     //public String date;
     public double open, high, low, close, volume, movingTenDayAvg, movingFiftyDayAvg;     //parameters of stock
     public static final String P_DATA = "data";
-    private static final double ACCEPTED_ERROR = 0.005;
+    private static final double ACCEPTED_ERROR = 0.01;
     private static final double PROBABLY_ZERO = 1.11E-15;
     private static final double BIG_NUMBER = 1.0E15;
-    private final int TOTAL_NUM_OF_DATA_ROWS = 6583; //total rows of data
+    private final int TOTAL_NUM_OF_DATA_ROWS = 1803; //total rows of data
     private final int NUM_OF_DATA_FIELDS = 6; //total columns of data
     String[][] stockData = new String[TOTAL_NUM_OF_DATA_ROWS][NUM_OF_DATA_FIELDS]; //2d array to store rice data
     String[][] trainingData, testingData;
-    private final String PATH = "src/main/data/MSFT_1min_sample.csv";
+    private final String PATH = "src/main/data/MSFT_5min_sample.csv";
 
 
     /**
@@ -51,12 +51,12 @@ public class Stock extends GPProblem implements SimpleProblemForm {
                 this.open = Double.parseDouble(trainingData[i][1]);
                 this.high = Double.parseDouble(trainingData[i][2]);
                 this.low = Double.parseDouble(trainingData[i][3]);
-                this.close = Double.parseDouble(trainingData[i][4]);
+                //this.close = Double.parseDouble(trainingData[i][4]);
                 this.volume = Double.parseDouble(trainingData[i][5]);
                 this.movingTenDayAvg = nDayMovingAverage2(trainingData, 10, i, 5);
                 this.movingFiftyDayAvg = nDayMovingAverage2(trainingData, 50, i, 5);
 
-                double expectedResult = Double.parseDouble(trainingData[i + 1][1]);
+                double expectedResult = Double.parseDouble(trainingData[i + 1][4]);
 
                 //System.out.println("row : "+i+" adjusted close : "+adjustedClose+" moving 10 : "+movingTenDayAvg + " moving 50 : "+movingFiftyDayAvg);
                 //let's say we want to get the adjusted close right now for everyday
@@ -67,14 +67,13 @@ public class Stock extends GPProblem implements SimpleProblemForm {
                 double currentErrorRatio = Math.abs(expectedResult - input.x) / expectedResult;
 
                 //System.out.println("current value: "+input.x+"\nexpectedResult: " + expectedResult);
-                if (!(result < BIG_NUMBER)) {
+                if (result >= BIG_NUMBER) {
                     result = BIG_NUMBER;
                 } else if (result < PROBABLY_ZERO) {
                     result = 0.0;
                 }
-                if (currentErrorRatio <= ACCEPTED_ERROR) {
-                    ++hits;
-                }
+                hits = getHits(evolutionState, (GPIndividual) individual, threadNum, input, hits, expectedResult);
+
                 sum += result;
             }
 
@@ -116,12 +115,12 @@ public class Stock extends GPProblem implements SimpleProblemForm {
             this.open = Double.parseDouble(testingData[i][1]);
             this.high = Double.parseDouble(testingData[i][2]);
             this.low = Double.parseDouble(testingData[i][3]);
-            this.close = Double.parseDouble(testingData[i][4]);
-            this.volume = Double.parseDouble(testingData[i][6]);
+            //this.close = Double.parseDouble(testingData[i][4]);
+            this.volume = Double.parseDouble(testingData[i][5]);
             this.movingTenDayAvg = nDayMovingAverage2(testingData, 10, i, 5);
             this.movingFiftyDayAvg = nDayMovingAverage2(testingData, 50, i, 5);
 
-            expectedResult = Double.parseDouble(testingData[i + 1][1]);
+            expectedResult = Double.parseDouble(testingData[i + 1][4]);
 
             //System.out.println("row : "+i+" adjusted close : "+adjustedClose+" moving 10 : "+movingTenDayAvg + " moving 50 : "+movingFiftyDayAvg);
             //let's say we want to get the adjusted close right now for everyday
@@ -136,17 +135,13 @@ public class Stock extends GPProblem implements SimpleProblemForm {
     }
 
     private int getHits(EvolutionState state, GPIndividual bestIndividual, int threadnum, DoubleData input, int hits, double expectedResult) {
-        bestIndividual.trees[0].child.eval(
-                state, threadnum, input, stack, bestIndividual, this);
+        bestIndividual.trees[0].child.eval(state, threadnum, input, stack, bestIndividual, this);
 
         //if the output of the rule is >=0 and that's what we were expecting increase hits
-        if (Math.abs(expectedResult-input.x)/expectedResult < ACCEPTED_ERROR) {
+        double errorRatio = Math.abs(expectedResult-input.x)/expectedResult;
+        if (errorRatio < ACCEPTED_ERROR) {
             hits++;
         }
-        //if the output of the rule is <0 and that's what we were expecting increase hits
-//        else if (input.x < 0.0 && expectedResult == -1.0) {
-//            hits++;
-//        }
         return hits;
     }
 
@@ -172,20 +167,14 @@ public class Stock extends GPProblem implements SimpleProblemForm {
      * @param percentage percentage of data to put in training and remaining in testing
      */
     public void splitData(double percentage) {
-
         final int TRAINING_DATA_ROWS = (int) Math.round(TOTAL_NUM_OF_DATA_ROWS * percentage);
-        final int TESTING_DATA_ROWS = (int) Math.round(TOTAL_NUM_OF_DATA_ROWS - TOTAL_NUM_OF_DATA_ROWS * percentage);
+        final int TESTING_DATA_ROWS = TOTAL_NUM_OF_DATA_ROWS - TRAINING_DATA_ROWS;
 
         this.trainingData = new String[TRAINING_DATA_ROWS][NUM_OF_DATA_FIELDS];
         this.testingData = new String[TESTING_DATA_ROWS][NUM_OF_DATA_FIELDS];
 
         System.arraycopy(this.stockData, 0, trainingData, 0, TRAINING_DATA_ROWS);
         System.arraycopy(this.stockData, TRAINING_DATA_ROWS, testingData, 0, TESTING_DATA_ROWS);
-
-        //System.out.println("Training data"+trainingData.length);
-        //printArray(trainingData);
-        //System.out.println("Training data"+testingData.length);
-        //printArray(testingData);
     }
 
     /**
