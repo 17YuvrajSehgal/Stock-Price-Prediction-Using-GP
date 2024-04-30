@@ -59,7 +59,7 @@ gp.fs.0.func.14.nc = nc0
 
 pop.subpop.0.size = 500
 
-generations = 10
+generations = 2
 
 
 eval.problem = StockPredictor.Stock

@@ -23,7 +23,7 @@ public class Stock extends GPProblem implements SimpleProblemForm {
     private static final double ACCEPTED_ERROR = 0.005;
     private static final double PROBABLY_ZERO = 1.11E-15;
     private static final double BIG_NUMBER = 1.0E15;
-    private final int TOTAL_NUM_OF_DATA_ROWS = 9563; //total rows of data
+    private final int TOTAL_NUM_OF_DATA_ROWS = 9564; //total rows of data
     private final int NUM_OF_DATA_FIELDS = 7; //total columns of data
     String[][] stockData = new String[TOTAL_NUM_OF_DATA_ROWS][NUM_OF_DATA_FIELDS]; //2d array to store rice data
     String[][] trainingData, testingData;
@@ -93,58 +93,64 @@ public class Stock extends GPProblem implements SimpleProblemForm {
     /**
      * Describes the best individual.
      *
-     * @param state         The current EvolutionState.
-     * @param bestIndividual    The best individual.
-     * @param subpopulation The subpopulation index.
-     * @param threadnum     The thread number.
-     * @param log           Additional parameter (not used).
+     * @param state          The current EvolutionState.
+     * @param bestIndividual The best individual.
+     * @param subpopulation  The subpopulation index.
+     * @param threadnum      The thread number.
+     * @param log            Additional parameter (not used).
      */
-//    @Override
-//    public void describe(EvolutionState state, Individual bestIndividual, int subpopulation, int threadnum, int log) {
-//        super.describe(state, bestIndividual, subpopulation, threadnum, log);
-//        System.out.println("running describe");
-//        if (!bestIndividual.evaluated) {
-//            DoubleData input = (DoubleData) this.input;
-//            double sum = 0;
-//            int hits = 0;
-//
-//            for (int i = 0; i < testingData.length - 2; i++) {
-//
-//                //date = Double.parseDouble(stockData[i][0]);
-//                this.open = Double.parseDouble(testingData[i][1]);
-//                this.high = Double.parseDouble(testingData[i][2]);
-//                this.low = Double.parseDouble(testingData[i][3]);
-//                this.close = Double.parseDouble(testingData[i][4]);
-//                this.adjustedClose = Double.parseDouble(testingData[i][5]);
-//                this.volume = Double.parseDouble(testingData[i][6]);
-//                this.movingTenDayAvg = tenDayMovingAvg(testingData,i,5);
-//                this.movingFiftyDayAvg = fiftyDayMovingAvg(testingData,i,5);
-//
-//                //let's say we want to get the adjusted close right now for everyday
-//                double expectedResult = Double.parseDouble(testingData[i + 1][1]);
-//                ((GPIndividual) bestIndividual).trees[0].child.eval(state, threadnum, this.input, this.stack, (GPIndividual) bestIndividual, this);
-//
-//                double currentError = Math.abs(expectedResult - input.x);
-//                double currentErrorRatio = Math.abs(expectedResult - input.x)/expectedResult;
-//
-//
-//                System.out.println("current value: "+input.x+"\nexpectedResult: " + expectedResult);
-//
-//                if (currentErrorRatio <= ACCEPTED_ERROR) {
-//                    ++hits;
-//                }
-//                sum += currentError;
-//
-//            }
-//
-//            //set koza statistics
-//            //hits = getHits(evolutionState, (GPIndividual) individual,threadNum,input,hits,expectedResult);
-//            KozaFitness kozaFitness = ((KozaFitness) bestIndividual.fitness);
-//            kozaFitness.setStandardizedFitness(state, sum);
-//            kozaFitness.hits = hits;
-//            bestIndividual.evaluated = true;
+    @Override
+    public void describe(EvolutionState state, Individual bestIndividual, int subpopulation, int threadnum, int log) {
+        super.describe(state, bestIndividual, subpopulation, threadnum, log);
+        state.output.println("running describe", log);
+
+        if (!(bestIndividual instanceof GPIndividual))
+            state.output.fatal("The best individual is not an instance of GPIndividual!!");
+
+        DoubleData input = (DoubleData) this.input;
+        int hits = 0;
+        double expectedResult;
+
+        for (int i = 0; i < testingData.length - 2; i++) {
+
+            //date = Double.parseDouble(stockData[i][0]);
+            this.open = Double.parseDouble(testingData[i][1]);
+            this.high = Double.parseDouble(testingData[i][2]);
+            this.low = Double.parseDouble(testingData[i][3]);
+            this.close = Double.parseDouble(testingData[i][4]);
+            this.adjustedClose = Double.parseDouble(testingData[i][5]);
+            this.volume = Double.parseDouble(testingData[i][6]);
+            this.movingTenDayAvg = nDayMovingAverage2(testingData, 10, i, 5);
+            this.movingFiftyDayAvg = nDayMovingAverage2(testingData, 50, i, 5);
+
+            expectedResult = Double.parseDouble(testingData[i + 1][1]);
+
+            //System.out.println("row : "+i+" adjusted close : "+adjustedClose+" moving 10 : "+movingTenDayAvg + " moving 50 : "+movingFiftyDayAvg);
+            //let's say we want to get the adjusted close right now for everyday
+
+            assert bestIndividual instanceof GPIndividual;
+            ((GPIndividual) bestIndividual).trees[0].child.eval(state, threadnum, this.input, this.stack, (GPIndividual) bestIndividual, this);
+
+            hits = getHits(state, (GPIndividual) bestIndividual, threadnum, input, hits, expectedResult);
+        }
+        state.output.println("Best Individual's total correct hits: " + hits + " out of " + this.testingData.length, log);
+        state.output.println("Best Individual's testing correctness: " + ((double) hits / (double) this.testingData.length) * 100 + "%", log);
+    }
+
+    private int getHits(EvolutionState state, GPIndividual bestIndividual, int threadnum, DoubleData input, int hits, double expectedResult) {
+        bestIndividual.trees[0].child.eval(
+                state, threadnum, input, stack, bestIndividual, this);
+
+        //if the output of the rule is >=0 and that's what we were expecting increase hits
+        if (Math.abs(expectedResult-input.x)/expectedResult < ACCEPTED_ERROR) {
+            hits++;
+        }
+        //if the output of the rule is <0 and that's what we were expecting increase hits
+//        else if (input.x < 0.0 && expectedResult == -1.0) {
+//            hits++;
 //        }
-//    }
+        return hits;
+    }
 
     /**
      * This method setups the GA problem by reading the data file and initializing the problem
@@ -207,29 +213,7 @@ public class Stock extends GPProblem implements SimpleProblemForm {
         }
 
         this.trainingData = stockData;
-        //splitData(0.9);
-    }
-
-    /**
-     * This is a utility function to calculate the total number correct predictions
-     *
-     * @param state          state
-     * @param bestIndividual best individual of the current population
-     * @param threadnum      number of thread
-     * @param input          input
-     * @param hits           number of hits
-     * @param expectedResult expected result
-     * @return number of hits
-     */
-    private int getHits(EvolutionState state, GPIndividual bestIndividual, int threadnum, DoubleData input, int hits, double expectedResult) {
-        bestIndividual.trees[0].child.eval(
-                state, threadnum, input, stack, bestIndividual, this);
-
-        double predictedResult = input.x;
-        if (Math.abs(predictedResult - expectedResult) < ACCEPTED_ERROR) {
-            hits++;
-        }
-        return hits;
+        splitData(0.5);
     }
 
     /**
