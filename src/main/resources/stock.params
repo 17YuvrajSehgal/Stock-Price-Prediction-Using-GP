@@ -7,7 +7,7 @@ gp.fs.0 = ec.gp.GPFunctionSet
 gp.fs.0.name = f0
 
 # We have 13 functions in the function set.  They are:
-gp.fs.0.size = 15
+gp.fs.0.size = 14
 
 #functions created by us
 gp.fs.0.func.0 = functions.Min
@@ -31,18 +31,18 @@ gp.fs.0.func.8 = terminal.Low
 gp.fs.0.func.8.nc = nc0
 gp.fs.0.func.9 = terminal.Close
 gp.fs.0.func.9.nc = nc0
-gp.fs.0.func.10 = terminal.AdjustedClose
+#gp.fs.0.func.10 = terminal.AdjustedClose
+#gp.fs.0.func.10.nc = nc0
+gp.fs.0.func.10 = terminal.Volume
 gp.fs.0.func.10.nc = nc0
-gp.fs.0.func.11 = terminal.Volume
+
+gp.fs.0.func.11 = functions.Ephemeral
 gp.fs.0.func.11.nc = nc0
 
-gp.fs.0.func.12 = functions.Ephemeral
+gp.fs.0.func.12 = terminal.MovingTenDayAvg
 gp.fs.0.func.12.nc = nc0
-
-gp.fs.0.func.13 = terminal.MovingTenDayAvg
+gp.fs.0.func.13 = terminal.MovingFiftyDayAvg
 gp.fs.0.func.13.nc = nc0
-gp.fs.0.func.14 = terminal.MovingFiftyDayAvg
-gp.fs.0.func.14.nc = nc0
 
 #gp.fs.0.func.15 = functions.Sin
 #gp.fs.0.func.15.nc = nc1

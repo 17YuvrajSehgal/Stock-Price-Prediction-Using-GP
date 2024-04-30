@@ -18,16 +18,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Stock extends GPProblem implements SimpleProblemForm {
 
     //public String date;
-    public double open, high, low, close, adjustedClose, volume, movingTenDayAvg, movingFiftyDayAvg;     //parameters of stock
+    public double open, high, low, close, volume, movingTenDayAvg, movingFiftyDayAvg;     //parameters of stock
     public static final String P_DATA = "data";
     private static final double ACCEPTED_ERROR = 0.005;
     private static final double PROBABLY_ZERO = 1.11E-15;
     private static final double BIG_NUMBER = 1.0E15;
-    private final int TOTAL_NUM_OF_DATA_ROWS = 9564; //total rows of data
-    private final int NUM_OF_DATA_FIELDS = 7; //total columns of data
+    private final int TOTAL_NUM_OF_DATA_ROWS = 6583; //total rows of data
+    private final int NUM_OF_DATA_FIELDS = 6; //total columns of data
     String[][] stockData = new String[TOTAL_NUM_OF_DATA_ROWS][NUM_OF_DATA_FIELDS]; //2d array to store rice data
     String[][] trainingData, testingData;
-    private final String PATH = "src/main/data/MSFT.csv";
+    private final String PATH = "src/main/data/MSFT_1min_sample.csv";
 
 
     /**
@@ -52,8 +52,7 @@ public class Stock extends GPProblem implements SimpleProblemForm {
                 this.high = Double.parseDouble(trainingData[i][2]);
                 this.low = Double.parseDouble(trainingData[i][3]);
                 this.close = Double.parseDouble(trainingData[i][4]);
-                this.adjustedClose = Double.parseDouble(trainingData[i][5]);
-                this.volume = Double.parseDouble(trainingData[i][6]);
+                this.volume = Double.parseDouble(trainingData[i][5]);
                 this.movingTenDayAvg = nDayMovingAverage2(trainingData, 10, i, 5);
                 this.movingFiftyDayAvg = nDayMovingAverage2(trainingData, 50, i, 5);
 
@@ -118,7 +117,6 @@ public class Stock extends GPProblem implements SimpleProblemForm {
             this.high = Double.parseDouble(testingData[i][2]);
             this.low = Double.parseDouble(testingData[i][3]);
             this.close = Double.parseDouble(testingData[i][4]);
-            this.adjustedClose = Double.parseDouble(testingData[i][5]);
             this.volume = Double.parseDouble(testingData[i][6]);
             this.movingTenDayAvg = nDayMovingAverage2(testingData, 10, i, 5);
             this.movingFiftyDayAvg = nDayMovingAverage2(testingData, 50, i, 5);
