@@ -2,7 +2,6 @@ package StockPredictor;
 
 import ec.EvolutionState;
 import ec.Individual;
-import ec.gp.GPData;
 import ec.gp.GPIndividual;
 import ec.gp.GPProblem;
 import ec.gp.koza.KozaFitness;
@@ -25,7 +24,7 @@ public class Stock extends GPProblem implements SimpleProblemForm {
     private static final double ACCEPTED_ERROR = 0.01;
     private static final double PROBABLY_ZERO = 1.11E-15;
     private static final double BIG_NUMBER = 1.0E15;
-    private static final int TOTAL_NUM_OF_DATA_ROWS = 6358; //total rows of data
+    private static final int TOTAL_NUM_OF_DATA_ROWS = 18697; //total rows of data
     private static final int NUM_OF_DATA_FIELDS = 7; //total columns of data
     private static final int NUM_OF_STOCKS_BUY = 100;
     String[][] stockData = new String[TOTAL_NUM_OF_DATA_ROWS][NUM_OF_DATA_FIELDS]; //2d array to store rice data
@@ -33,8 +32,7 @@ public class Stock extends GPProblem implements SimpleProblemForm {
     private boolean buyFlag = false;
     private static final double initialAccountBalance = 1000000;
     private int totalStockHold = 100;
-
-    private final String PATH = "src/main/data/NVDA.csv";
+    private final String PATH = "src/main/data/SandP500.csv";
 
 
     /**
@@ -54,25 +52,18 @@ public class Stock extends GPProblem implements SimpleProblemForm {
 
             for (int i = 0; i < trainingData.length - 2; i++) {
 
-                //date = Double.parseDouble(stockData[i][0]);
                 this.open = Double.parseDouble(trainingData[i][1]);
                 this.high = Double.parseDouble(trainingData[i][2]);
                 this.low = Double.parseDouble(trainingData[i][3]);
-                //this.close = Double.parseDouble(trainingData[i][4]);
                 this.volume = Double.parseDouble(trainingData[i][6]);
                 this.movingTenDayAvg = nDayMovingAverage2(trainingData, 10, i, 5);
                 this.movingFiftyDayAvg = nDayMovingAverage2(trainingData, 50, i, 5);
-
                 double expectedResult = Double.parseDouble(trainingData[i + 1][4]);
-
-                //System.out.println("row : "+i+" adjusted close : "+adjustedClose+" moving 10 : "+movingTenDayAvg + " moving 50 : "+movingFiftyDayAvg);
-                //let's say we want to get the adjusted close right now for everyday
 
                 ((GPIndividual) individual).trees[0].child.eval(evolutionState, threadNum, this.input, this.stack, (GPIndividual) individual, this);
 
                 double result = Math.abs(expectedResult - input.x); //todo
 
-                //System.out.println("current value: "+input.x+"\nexpectedResult: " + expectedResult);
                 if (result >= BIG_NUMBER) {
                     result = BIG_NUMBER;
                 } else if (result < PROBABLY_ZERO) {
@@ -129,7 +120,7 @@ public class Stock extends GPProblem implements SimpleProblemForm {
             this.movingTenDayAvg = nDayMovingAverage2(testingData, 10, i, 5);
             this.movingFiftyDayAvg = nDayMovingAverage2(testingData, 50, i, 5);
 
-            expectedResult = Double.parseDouble(testingData[i + 1][4]);
+
 
             //System.out.println("row : "+i+" adjusted close : "+adjustedClose+" moving 10 : "+movingTenDayAvg + " moving 50 : "+movingFiftyDayAvg);
             //let's say we want to get the adjusted close right now for everyday
@@ -137,46 +128,46 @@ public class Stock extends GPProblem implements SimpleProblemForm {
             assert bestIndividual instanceof GPIndividual;
             ((GPIndividual) bestIndividual).trees[0].child.eval(state, threadnum, this.input, this.stack, (GPIndividual) bestIndividual, this);
 
-            ((GPIndividual) bestIndividual).trees[0].child.eval(state, threadnum, input, stack, (GPIndividual) bestIndividual, this);
-            double errorRatio = Math.abs(expectedResult - input.x) / expectedResult;
-            if (errorRatio < ACCEPTED_ERROR) {
-                hits++;
+            double actualResult = ((DoubleData) this.input).x;
+            expectedResult = Double.parseDouble(testingData[i + 1][4]);
+            double errorRatio = Math.abs(expectedResult - actualResult)/expectedResult;
 
-                if (i > 0) {
-                    trade(state, (GPIndividual) bestIndividual, threadnum, input, expectedResult,
-                            Double.parseDouble(testingData[i - 1][4]));
-                }
-                if (account_balance <= 0 && totalStockHold<=0) {
-                    state.output.println("Bankruptcy declared breaking out",log);
-                    break;
-                }
-                if (buyFlag && account_balance > NUM_OF_STOCKS_BUY * Double.parseDouble(testingData[i][4])) { //todo make less stocks available
-                    //if predicted value is to rise the buy n stocks at the current price and
-                    //reduce the total cost from the current account balance
-                    account_balance -= NUM_OF_STOCKS_BUY * Double.parseDouble(testingData[i][4]);
-                    double netWorth = totalStockHold*Double.parseDouble(testingData[i][4]);
-                    double netProfit = netWorth - initialAccountBalance;
-                    totalStockHold += NUM_OF_STOCKS_BUY;
-                    state.output.println("Buying " + NUM_OF_STOCKS_BUY + " stocks @" + testingData[i][4] + "$/stock," +
-                            " current account balance: " + account_balance + " current net profit : " + netProfit+" " +
-                            " net worth of account at that time: "+netWorth, log);
-                }
-                if (!buyFlag && totalStockHold>=NUM_OF_STOCKS_BUY) {
-                    //if predicted value is to fall then sell n stocks at the current price and
-                    //add the total cost from the current account balance
-                    account_balance += NUM_OF_STOCKS_BUY * Double.parseDouble(testingData[i][4]);
-                    double netWorth = totalStockHold*Double.parseDouble(testingData[i][4]);
-                    double netProfit = netWorth - initialAccountBalance;
-                    totalStockHold -= NUM_OF_STOCKS_BUY;
-                    state.output.println("Selling " + NUM_OF_STOCKS_BUY + " stocks @" + testingData[i][4] + "$/stock," +
-                            " current account balance: " + account_balance + " current net profit : " + netProfit+" current " +
-                            "net worth of account : "+netWorth, log);
-                }
-                if(i==testingData.length-1){
-                    double netWorth = totalStockHold*Double.parseDouble(testingData[i][4]);
-                    state.output.println("\n\nEnd of training data has been reached, current portfolio contains "+totalStockHold+" number" +
-                            "of stocks. Total Worth: "+netWorth,log);
-                }
+            if (errorRatio <= ACCEPTED_ERROR) {
+                hits++;
+            }
+            if (i > 0) {
+                trade(input, Double.parseDouble(testingData[i - 1][4]));
+            }
+            if (account_balance <= 0 && totalStockHold <= 0) {
+                state.output.println("Bankruptcy declared breaking out", log);
+                break;
+            }
+            if (buyFlag && account_balance > NUM_OF_STOCKS_BUY * Double.parseDouble(testingData[i][4])) { //todo make less stocks available
+                //if predicted value is to rise the buy n stocks at the current price and
+                //reduce the total cost from the current account balance
+                account_balance -= NUM_OF_STOCKS_BUY * Double.parseDouble(testingData[i][4]);
+                double netWorth = totalStockHold * Double.parseDouble(testingData[i][4]);
+                double netProfit = netWorth - initialAccountBalance;
+                totalStockHold += NUM_OF_STOCKS_BUY;
+                state.output.println("Buying " + NUM_OF_STOCKS_BUY + " stocks @" + testingData[i][4] + "$/stock," +
+                        " current account balance: " + account_balance + " current net profit : " + netProfit + " " +
+                        " net worth of account at that time: " + netWorth, log);
+            }
+            if (!buyFlag && totalStockHold >= NUM_OF_STOCKS_BUY) {
+                //if predicted value is to fall then sell n stocks at the current price and
+                //add the total cost from the current account balance
+                account_balance += NUM_OF_STOCKS_BUY * Double.parseDouble(testingData[i][4]);
+                double netWorth = totalStockHold * Double.parseDouble(testingData[i][4]);
+                double netProfit = netWorth - initialAccountBalance;
+                totalStockHold -= NUM_OF_STOCKS_BUY;
+                state.output.println("Selling " + NUM_OF_STOCKS_BUY + " stocks @" + testingData[i][4] + "$/stock," +
+                        " current account balance: " + account_balance + " current net profit : " + netProfit + " current " +
+                        "net worth of account : " + netWorth, log);
+            }
+            if (i == testingData.length - 1) {
+                double netWorth = totalStockHold * Double.parseDouble(testingData[i][4]);
+                state.output.println("\n\nEnd of training data has been reached, current portfolio contains " + totalStockHold + " number" +
+                        "of stocks. Total Worth: " + netWorth, log);
             }
 
         }
@@ -189,7 +180,8 @@ public class Stock extends GPProblem implements SimpleProblemForm {
         state.output.println("Current holding of stock: " + totalStockHold, log);
         double netWorth = totalStockHold * Double.parseDouble(stockData[TOTAL_NUM_OF_DATA_ROWS - 2][4]);
         DecimalFormat decimalFormat = new DecimalFormat("#.##"); // You can adjust the pattern as per your preference
-        state.output.println("Approximate net worth of account currently: " + decimalFormat.format(netWorth), log);        state.output.println("Final flag : " + buyFlag, log);
+        state.output.println("Approximate net worth of account currently: " + decimalFormat.format(netWorth), log);
+        state.output.println("Final flag : " + buyFlag, log);
 
     }
 
@@ -204,8 +196,7 @@ public class Stock extends GPProblem implements SimpleProblemForm {
         return hits;
     }
 
-    private void trade(EvolutionState state, GPIndividual bestIndividual, int threadNum,
-                       DoubleData input, double actualResult, double previousPrice) {
+    private void trade(DoubleData input, double previousPrice) {
 //todo check        bestIndividual.trees[0].child.eval(state, threadNum, input, stack, bestIndividual, this);
 
         //if the predicted value says stock will rise, then set buyFlag
