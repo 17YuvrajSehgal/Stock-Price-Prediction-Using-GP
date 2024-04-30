@@ -20,14 +20,14 @@ public class Stock extends GPProblem implements SimpleProblemForm {
     //public String date;
     public double open, high, low, close, volume, movingTenDayAvg, movingFiftyDayAvg;     //parameters of stock
     public static final String P_DATA = "data";
-    private static final double ACCEPTED_ERROR = 0.01;
+    private static final double ACCEPTED_ERROR = 0.001;
     private static final double PROBABLY_ZERO = 1.11E-15;
     private static final double BIG_NUMBER = 1.0E15;
-    private final int TOTAL_NUM_OF_DATA_ROWS = 1803; //total rows of data
+    private final int TOTAL_NUM_OF_DATA_ROWS = 6583; //total rows of data
     private final int NUM_OF_DATA_FIELDS = 6; //total columns of data
     String[][] stockData = new String[TOTAL_NUM_OF_DATA_ROWS][NUM_OF_DATA_FIELDS]; //2d array to store rice data
     String[][] trainingData, testingData;
-    private final String PATH = "src/main/data/MSFT_5min_sample.csv";
+    private final String PATH = "src/main/data/MSFT_1min_sample.csv";
 
 
     /**
