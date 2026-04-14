@@ -1,0 +1,5 @@
+parent.0 = stock-full.params
+
+# Return prediction profile
+eval.problem.target-column = close-return
+eval.problem.hit-threshold = 0.01

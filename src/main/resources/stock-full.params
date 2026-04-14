@@ -1,0 +1,10 @@
+parent.0 = stock.params
+
+# Heavier profile for longer experiments
+pop.subpop.0.size = 1500
+generations = 75
+breed.elite.0 = 8
+select.tournament.size = 7
+gp.koza.half.max-depth = 10
+gp.koza.mutate.tries = 5
+eval.problem.validation-mode = walk-forward

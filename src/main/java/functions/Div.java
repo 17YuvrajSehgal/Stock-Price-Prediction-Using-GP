@@ -10,6 +10,7 @@ import terminal.DoubleData;
 
 
 public class Div extends GPNode {
+    private static final double EPSILON = 1.0e-9;
 	
 	public String toString() { return "/"; }
 
@@ -21,19 +22,15 @@ public class Div extends GPNode {
                  final ADFStack stack,
                  final GPIndividual individual,
                  final Problem problem) {
-
 		DoubleData rd = ((DoubleData)(input));
 
+	    children[0].eval(state,thread,input,stack,individual,problem);
+        double numerator = rd.x;
+
 	    children[1].eval(state,thread,input,stack,individual,problem);
-	    if (Math.abs(rd.x) < 0.000000001) {
-	    	rd.x = 1;
-	    } else {
-	    	double result;
-		    result = rd.x;
-		    
-		    children[0].eval(state,thread,input,stack,individual,problem);
-		    rd.x = rd.x / result;
-	    }
+        double denominator = rd.x;
+
+	    rd.x = Math.abs(denominator) < EPSILON ? 1.0 : numerator / denominator;
     }
 }
 

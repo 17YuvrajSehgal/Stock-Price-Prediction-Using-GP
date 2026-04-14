@@ -1,0 +1,10 @@
+parent.0 = stock.params
+
+# Fast local iteration profile
+pop.subpop.0.size = 200
+generations = 10
+breed.elite.0 = 2
+select.tournament.size = 3
+gp.koza.half.max-depth = 6
+gp.koza.mutate.tries = 1
+eval.problem.validation-mode = holdout

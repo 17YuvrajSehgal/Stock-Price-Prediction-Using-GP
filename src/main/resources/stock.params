@@ -7,7 +7,7 @@ gp.fs.0 = ec.gp.GPFunctionSet
 gp.fs.0.name = f0
 
 # We have 13 functions in the function set.  They are:
-gp.fs.0.size = 15
+gp.fs.0.size = 27
 
 #functions created by us
 gp.fs.0.func.0 = functions.Min
@@ -43,34 +43,94 @@ gp.fs.0.func.13 = terminal.MovingTenDayAvg
 gp.fs.0.func.13.nc = nc0
 gp.fs.0.func.14 = terminal.MovingFiftyDayAvg
 gp.fs.0.func.14.nc = nc0
+gp.fs.0.func.15 = terminal.PreviousOpen
+gp.fs.0.func.15.nc = nc0
+gp.fs.0.func.16 = terminal.PreviousClose
+gp.fs.0.func.16.nc = nc0
+gp.fs.0.func.17 = terminal.DailyRange
+gp.fs.0.func.17.nc = nc0
+gp.fs.0.func.18 = terminal.IntradayChange
+gp.fs.0.func.18.nc = nc0
+gp.fs.0.func.19 = terminal.VolumeTenDayAvg
+gp.fs.0.func.19.nc = nc0
+gp.fs.0.func.20 = functions.Abs
+gp.fs.0.func.20.nc = nc1
+gp.fs.0.func.21 = functions.Log
+gp.fs.0.func.21.nc = nc1
+gp.fs.0.func.22 = functions.Sqrt
+gp.fs.0.func.22.nc = nc1
+gp.fs.0.func.23 = terminal.LaggedOpenReturn
+gp.fs.0.func.23.nc = nc0
+gp.fs.0.func.24 = terminal.LaggedCloseReturn
+gp.fs.0.func.24.nc = nc0
+gp.fs.0.func.25 = terminal.CloseVolatilityTenDay
+gp.fs.0.func.25.nc = nc0
+gp.fs.0.func.26 = terminal.CloseVolatilityTwentyDay
+gp.fs.0.func.26.nc = nc0
 
-#gp.fs.0.func.15 = functions.Sin
-#gp.fs.0.func.15.nc = nc1
-#gp.fs.0.func.16 = functions.Cos
-#gp.fs.0.func.16.nc = nc1
-#gp.fs.0.func.17 = functions.Cosec
-#gp.fs.0.func.17.nc = nc1
-#gp.fs.0.func.18 = functions.Cot
-#gp.fs.0.func.18.nc = nc1
-#gp.fs.0.func.19 = functions.Sec
-#gp.fs.0.func.19.nc = nc1
-#gp.fs.0.func.20 = functions.Tan
-#gp.fs.0.func.20.nc = nc1
+#gp.fs.0.func.27 = functions.Sin
+#gp.fs.0.func.27.nc = nc1
+#gp.fs.0.func.28 = functions.Cos
+#gp.fs.0.func.28.nc = nc1
+#gp.fs.0.func.29 = functions.Cosec
+#gp.fs.0.func.29.nc = nc1
+#gp.fs.0.func.30 = functions.Cot
+#gp.fs.0.func.30.nc = nc1
+#gp.fs.0.func.31 = functions.Sec
+#gp.fs.0.func.31.nc = nc1
+#gp.fs.0.func.32 = functions.Tan
+#gp.fs.0.func.32.nc = nc1
 
-pop.subpop.0.size = 500
+pop.subpop.0.size = 1000
 
-generations = 2
+generations = 50
 
 
 eval.problem = StockPredictor.Stock
 eval.problem.data = terminal.DoubleData
+eval.problem.dataset = src/main/data/MSFT.csv
+eval.problem.training-split = 0.8
+eval.problem.target-column = open
+eval.problem.hit-threshold = 0.005
+eval.problem.validation-mode = holdout
+eval.problem.walk-forward-training-rows = 252
+eval.problem.walk-forward-test-rows = 20
+eval.problem.walk-forward-step-rows = 20
 
 # output statistics to the file "out.stat" in the directory
 # the run was started in
 stat.file				$out.stat
 
 ##change
-breed.elite.0 = 			3
+breed.elite.0 = 			5
 
 # Reproduction will use Tournament Selection
 breed.reproduce.source.0 = ec.select.TournamentSelection
+
+# Add mutation to encourage diversity
+gp.koza.mutate.prob = 0.2
+gp.koza.mutate.source.0 = ec.select.TournamentSelection
+gp.koza.mutate.ns.0 = ec.gp.koza.KozaNodeSelector
+gp.koza.mutate.build.0 = ec.gp.koza.GrowBuilder
+gp.koza.mutate.maxdepth = 17
+gp.koza.mutate.tries = 1
+
+# Update breeding pipeline to include mutation
+pop.subpop.0.species.pipe.num-sources = 3
+pop.subpop.0.species.pipe.source.2 = ec.gp.koza.MutationPipeline
+pop.subpop.0.species.pipe.source.2.prob = 0.2
+
+# Adjust crossover and reproduction probabilities
+pop.subpop.0.species.pipe.source.0.prob = 0.7
+pop.subpop.0.species.pipe.source.1.prob = 0.1
+
+# Override tree building parameters for more diversity
+gp.koza.half.min-depth = 2
+gp.koza.half.max-depth = 8
+gp.koza.half.growp = 0.5
+
+# Increase tournament size for more selection pressure
+select.tournament.size = 5
+
+# Add more diversity by increasing mutation tries
+gp.koza.mutate.tries = 3
