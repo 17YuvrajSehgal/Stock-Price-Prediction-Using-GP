@@ -1,0 +1,39 @@
+parent.0 = stock-strategy.params
+
+# Phase 3 — four-tree GP individual with risk controls.
+# Tree 0: long-entry alpha   (positive output -> activate long)
+# Tree 1: short-entry alpha  (positive output -> activate short)
+# Tree 2: exit signal        (positive output -> force flat)
+# Tree 3: raw size           (mapped via |tanh(x)| to [0, 1], clipped at max-leverage)
+
+eval.problem = StockPredictor.MultiTreeStrategyProblem
+
+# Four trees per individual, all sharing the rich function set f0.
+pop.subpop.0.species.ind.numtrees = 4
+pop.subpop.0.species.ind.tree.0 = ec.gp.GPTree
+pop.subpop.0.species.ind.tree.0.tc = tc0
+pop.subpop.0.species.ind.tree.1 = ec.gp.GPTree
+pop.subpop.0.species.ind.tree.1.tc = tc0
+pop.subpop.0.species.ind.tree.2 = ec.gp.GPTree
+pop.subpop.0.species.ind.tree.2.tc = tc0
+pop.subpop.0.species.ind.tree.3 = ec.gp.GPTree
+pop.subpop.0.species.ind.tree.3.tc = tc0
+
+# Position-aware execution so multi-bar holds and risk controls actually apply.
+eval.problem.fitness.execution-mode = position-aware
+
+# Risk controls — applied in POSITION_AWARE mode only.
+eval.problem.risk.max-holding-bars = 20
+eval.problem.risk.daily-loss-limit-pct = 0.03
+eval.problem.risk.max-leverage = 1.0
+
+# Multi-tree expression space is larger; shrink per-tree depth a touch to fight bloat.
+gp.koza.half.min-depth = 2
+gp.koza.half.max-depth = 5
+gp.koza.xover.maxdepth = 10
+gp.koza.mutate.maxdepth = 10
+
+# Turnover penalty is far less brutal under POSITION_AWARE; lower the weight.
+eval.problem.fitness.weight-turnover = 10.0
+
+eval.problem.export-prefix = multi-strategy-run

@@ -26,7 +26,19 @@ public class Ephemeral extends ERC {
 
     @Override
     public void resetNode(EvolutionState state, int thread) {
-        value = state.random[thread].nextDouble();
+        double u = state.random[thread].nextDouble();
+        if (u < 0.5) {
+            // 50%: uniform in [-1, 1]
+            value = 2.0 * state.random[thread].nextDouble() - 1.0;
+        } else if (u < 0.8) {
+            // 30%: log-uniform in [1e-3, 1e2], random sign
+            double log = -3.0 + 5.0 * state.random[thread].nextDouble();
+            double magnitude = Math.pow(10.0, log);
+            value = state.random[thread].nextBoolean() ? magnitude : -magnitude;
+        } else {
+            // 20%: small integers in {-5, -4, ..., 4, 5}
+            value = state.random[thread].nextInt(11) - 5;
+        }
     }
 
     @Override

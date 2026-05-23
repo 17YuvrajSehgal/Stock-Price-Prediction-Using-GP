@@ -1,0 +1,37 @@
+parent.0 = stock.params
+
+# Trading-oriented profile with smaller trees and exportable backtest artifacts.
+seed.0 = 20260430
+pop.subpop.0.size = 800
+generations = 60
+breed.elite.0 = 6
+select.tournament.size = 5
+
+# Reduce GP bloat.
+gp.koza.half.min-depth = 2
+gp.koza.half.max-depth = 6
+gp.koza.xover.maxdepth = 10
+gp.koza.mutate.maxdepth = 10
+gp.koza.mutate.tries = 3
+
+# Walk-forward settings that fit shorter equities histories like SNDK.
+eval.problem.validation-mode = walk-forward
+eval.problem.training-split = 0.8
+eval.problem.walk-forward-training-rows = 120
+eval.problem.walk-forward-test-rows = 10
+eval.problem.walk-forward-step-rows = 10
+
+# Prediction target and trade mapping.
+eval.problem.target-column = open
+eval.problem.backtest.entry-column = close
+eval.problem.backtest.signal-threshold = 0.002
+eval.problem.backtest.initial-capital = 100000
+eval.problem.backtest.position-fraction = 1.0
+eval.problem.backtest.commission-bps = 1.0
+eval.problem.backtest.slippage-bps = 2.0
+
+# Complexity pressure and export output.
+eval.problem.complexity-penalty = 0.00002
+eval.problem.complexity-free-nodes = 50
+eval.problem.export-dir = src/main/results
+eval.problem.export-prefix = trading-run

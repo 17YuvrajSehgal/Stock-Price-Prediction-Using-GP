@@ -1,0 +1,56 @@
+parent.0 = stock.params
+
+# Phase 1 — richer feature set built on top of the existing function set.
+# Adds 21 indicator terminals (RSI/MACD/BB/ATR/Stoch/ADX/OBV/Momentum/Channel/VWAP/Calendar).
+
+gp.fs.0.size = 48
+
+gp.fs.0.func.27 = terminal.Rsi14
+gp.fs.0.func.27.nc = nc0
+gp.fs.0.func.28 = terminal.Macd
+gp.fs.0.func.28.nc = nc0
+gp.fs.0.func.29 = terminal.MacdSignal
+gp.fs.0.func.29.nc = nc0
+gp.fs.0.func.30 = terminal.MacdHist
+gp.fs.0.func.30.nc = nc0
+gp.fs.0.func.31 = terminal.BollingerZ20
+gp.fs.0.func.31.nc = nc0
+gp.fs.0.func.32 = terminal.Atr14Pct
+gp.fs.0.func.32.nc = nc0
+gp.fs.0.func.33 = terminal.StochK14
+gp.fs.0.func.33.nc = nc0
+gp.fs.0.func.34 = terminal.StochD14
+gp.fs.0.func.34.nc = nc0
+gp.fs.0.func.35 = terminal.Adx14
+gp.fs.0.func.35.nc = nc0
+gp.fs.0.func.36 = terminal.ObvSlope10
+gp.fs.0.func.36.nc = nc0
+gp.fs.0.func.37 = terminal.Mom5
+gp.fs.0.func.37.nc = nc0
+gp.fs.0.func.38 = terminal.Mom10
+gp.fs.0.func.38.nc = nc0
+gp.fs.0.func.39 = terminal.Mom20
+gp.fs.0.func.39.nc = nc0
+gp.fs.0.func.40 = terminal.Mom60
+gp.fs.0.func.40.nc = nc0
+gp.fs.0.func.41 = terminal.Mom120
+gp.fs.0.func.41.nc = nc0
+gp.fs.0.func.42 = terminal.ChannelPos20
+gp.fs.0.func.42.nc = nc0
+gp.fs.0.func.43 = terminal.ChannelPos55
+gp.fs.0.func.43.nc = nc0
+gp.fs.0.func.44 = terminal.VwapDist20
+gp.fs.0.func.44.nc = nc0
+gp.fs.0.func.45 = terminal.DowSin
+gp.fs.0.func.45.nc = nc0
+gp.fs.0.func.46 = terminal.DowCos
+gp.fs.0.func.46.nc = nc0
+gp.fs.0.func.47 = terminal.DaysToMonthEnd
+gp.fs.0.func.47.nc = nc0
+
+# Slightly larger population helps explore the richer terminal set.
+pop.subpop.0.size = 1500
+generations = 60
+breed.elite.0 = 8
+select.tournament.size = 5
+gp.koza.half.max-depth = 8

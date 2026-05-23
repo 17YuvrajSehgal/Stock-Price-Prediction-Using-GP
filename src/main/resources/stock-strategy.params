@@ -1,0 +1,61 @@
+parent.0 = stock-rich.params
+
+# We are optimizing risk-adjusted PnL, not driving fitness to a known optimum;
+# disable the "ideal individual" early-exit behaviour inherited from simple.params.
+quit-on-run-complete = false
+
+# Phase 2 — trading-aware fitness profile.
+# Evolves an alpha-score tree; fitness = backtest Sharpe + Calmar net of turnover,
+# complexity, and a low-activity penalty. Uses walk-forward stitched OOS bars
+# during evolution so the score reflects out-of-sample behavior.
+
+eval.problem = StockPredictor.TradingStrategyProblem
+eval.problem.data = terminal.DoubleData
+
+# Walk-forward stitched OOS fitness with the same window sizes as the trading profile.
+eval.problem.validation-mode = walk-forward
+eval.problem.training-split = 0.8
+eval.problem.walk-forward-training-rows = 120
+eval.problem.walk-forward-test-rows = 10
+eval.problem.walk-forward-step-rows = 10
+
+# Trading mechanics shared with the existing backtest engine.
+eval.problem.target-column = open
+eval.problem.backtest.entry-column = close
+eval.problem.backtest.signal-threshold = 0.002
+eval.problem.backtest.initial-capital = 100000
+eval.problem.backtest.position-fraction = 1.0
+eval.problem.backtest.commission-bps = 1.0
+eval.problem.backtest.slippage-bps = 2.0
+
+# Disable the regression-style complexity penalty — TradingStrategyProblem applies its own.
+eval.problem.complexity-penalty = 0.0
+
+# Composite fitness weights. Score = w_sharpe*sharpe + w_calmar*calmar
+#   - w_turnover*turnover
+#   - w_complexity*(nodes/100)
+#   - w_min_trades * max(0, min_trades - trades) / min_trades
+# Standardized = max(0, offset - score). ECJ minimizes standardized, so smaller is better.
+eval.problem.fitness.weight-sharpe = 100.0
+eval.problem.fitness.weight-calmar = 20.0
+eval.problem.fitness.weight-turnover = 50.0
+eval.problem.fitness.weight-complexity = 1.0
+eval.problem.fitness.weight-min-trades = 100.0
+eval.problem.fitness.min-trades = 30
+eval.problem.fitness.offset = 1000.0
+eval.problem.fitness.bars-per-year = 252
+eval.problem.fitness.execution-mode = always-flat-overnight
+
+# Trees should be expressive enough for real strategies but bounded to fight bloat.
+gp.koza.half.min-depth = 2
+gp.koza.half.max-depth = 7
+gp.koza.xover.maxdepth = 12
+gp.koza.mutate.maxdepth = 12
+
+pop.subpop.0.size = 1000
+generations = 50
+breed.elite.0 = 5
+select.tournament.size = 5
+
+eval.problem.export-dir = src/main/results
+eval.problem.export-prefix = strategy-run
